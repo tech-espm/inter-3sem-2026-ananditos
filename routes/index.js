@@ -1,9 +1,15 @@
 const express = require("express");
 const wrap = require("express-async-error-wrapper");
-
+const axios = require("axios");
 const router = express.Router();
 
+const url_api = process.env.url_api;
+
 router.get("/", wrap(async (req, res) => {
+	const response = await axios.get(url_api + "?sensor=passage&data_inicial=2026-04-26&data_final=2026-04-28");
+		const dados = response.data;
+	console.log(dados);
+	
 	let nomeDoUsuarioQueVeioDoBanco = "Rafael";
 
 	let opcoes = {
