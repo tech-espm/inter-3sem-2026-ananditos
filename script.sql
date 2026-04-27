@@ -18,35 +18,6 @@ CREATE TABLE passagem (
   KEY passagem_id_sensor (id_sensor)
 );
 
--- Query de consolidação por dia da semana (1 = domingo, 2 = segunda...) e por hora, para o heatmap com 7 colunas e 24 linhas
-select dayofweek(data) dia_semana, extract(hour from data) hora, sum(entrada) fluxo_total
-from passagem
-where data between '2025-03-03 00:00:00' and '2025-03-14 23:59:59'
-and id_sensor = 2
-group by dia_semana, hora;
-
--- Query de consolidação por dia do mês e por hora, para o heatmap de visão explodida por dia da semana com N colunas e 24 linhas
-select date_format(date(data), '%d/%m/%Y') dia, extract(hour from data) hora, sum(entrada) fluxo_total
-from passagem
-where data between '2025-03-03 00:00:00' and '2025-03-14 23:59:59'
-and id_sensor = 2
-group by dia, hora;
-
--- Query de consolidação de pessoas presentes no espaço por dia do mês e por hora, para o heatmap de visão explodida por presença com N colunas e 24 linhas
--- A presença é dada por uma coluna virtual, gerada via código, onde:
--- presenca[i] = max(0, presenca[i - 1] + total_entrada[i] - total_saida[i])
--- exceto presenca[0], que vale 0
--- (Consolidado i deve ser reiniciado para 0 na mudança de dia)
-select date_format(date(data), '%d/%m/%Y') dia, extract(hour from data) hora, sum(entrada) total_entrada, sum(saida) total_saida
-from passagem
-where data between '2025-03-03 00:00:00' and '2025-03-14 23:59:59'
-and id_sensor = 2
-group by dia, hora
-order by dia, hora;
-
-
-
-
 
 -- ==============================================================7
 -- =============================================================
@@ -85,6 +56,35 @@ INSERT INTO configuracao (chave, valor, descricao) VALUES
   ('janela_tempo_real_minutos', '60', 'Janela de tempo considerada para visão ao vivo (em minutos)');
 
 
+-- Query de consolidação por dia da semana (1 = domingo, 2 = segunda...) e por hora, para o heatmap com 7 colunas e 24 linhas
+select dayofweek(data) dia_semana, extract(hour from data) hora, sum(entrada) fluxo_total
+from passagem
+where data between '2025-03-03 00:00:00' and '2025-03-14 23:59:59'
+and id_sensor = 2
+group by dia_semana, hora;
+
+-- Query de consolidação por dia do mês e por hora, para o heatmap de visão explodida por dia da semana com N colunas e 24 linhas
+select date_format(date(data), '%d/%m/%Y') dia, extract(hour from data) hora, sum(entrada) fluxo_total
+from passagem
+where data between '2025-03-03 00:00:00' and '2025-03-14 23:59:59'
+and id_sensor = 2
+group by dia, hora;
+
+-- Query de consolidação de pessoas presentes no espaço por dia do mês e por hora, para o heatmap de visão explodida por presença com N colunas e 24 linhas
+-- A presença é dada por uma coluna virtual, gerada via código, onde:
+-- presenca[i] = max(0, presenca[i - 1] + total_entrada[i] - total_saida[i])
+-- exceto presenca[0], que vale 0
+-- (Consolidado i deve ser reiniciado para 0 na mudança de dia)
+select date_format(date(data), '%d/%m/%Y') dia, extract(hour from data) hora, sum(entrada) total_entrada, sum(saida) total_saida
+from passagem
+where data between '2025-03-03 00:00:00' and '2025-03-14 23:59:59'
+and id_sensor = 2
+group by dia, hora
+order by dia, hora;
+
+
+
+
 -- =============================================================
 -- VISÃO AO VIVO
 -- =============================================================
@@ -98,11 +98,11 @@ SELECT
   s.descricao,
   s.localizacao,
   s.capacidade,
-  GREATEST(0, SUM(p.entrada) - SUM(p.saida))            AS presentes,
+  GREATEST(0, SUM(p.entrada) - SUM(p.saida))          AS presentes,
   ROUND(
     GREATEST(0, SUM(p.entrada) - SUM(p.saida))
     / s.capacidade * 100
-  , 1)                                                   AS percentual_ocupacao,
+  , 1)                                                 AS percentual_ocupacao,
   CASE
     WHEN GREATEST(0, SUM(p.entrada) - SUM(p.saida)) / s.capacidade * 100
          >= (SELECT valor FROM configuracao WHERE chave = 'alerta_ocupacao_vermelho')
@@ -111,10 +111,10 @@ SELECT
          >= (SELECT valor FROM configuracao WHERE chave = 'alerta_ocupacao_amarelo')
     THEN 'ATENCAO'
     ELSE 'NORMAL'
-  END                                                    AS status_alerta
+  END                                                  AS status_alerta
 FROM passagem p
 JOIN sensor s ON s.id = p.id_sensor
-WHERE DATE(p.data) = CURDATE()
+WHERE DATE(p.data) = CURDATE()  
 GROUP BY s.id, s.device_id, s.descricao, s.localizacao, s.capacidade;
 
 -- Fluxo da última hora (janela rolante de 60 minutos)
@@ -126,7 +126,7 @@ SELECT
   SUM(p.saida)   AS saidas_ultima_hora
 FROM passagem p
 JOIN sensor s ON s.id = p.id_sensor
-WHERE p.data >= NOW() - INTERVAL 60 MINUTE
+WHERE p.data >= NOW() - INTERVAL 60 MINUTE -- tá fucionando
 GROUP BY s.id, s.device_id, s.descricao;
 
 
