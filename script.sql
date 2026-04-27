@@ -113,8 +113,8 @@ SELECT
     ELSE 'NORMAL'
   END                                                  AS status_alerta
 FROM passagem p
-JOIN sensor s ON s.id = p.id_sensor
-WHERE DATE(p.data) = CURDATE()  
+JOIN sensor s ON s.id = p.id_sensor 
+WHERE DATE(p.data) = CURDATE()  -- tbm tá funcionando?
 GROUP BY s.id, s.device_id, s.descricao, s.localizacao, s.capacidade;
 
 -- Fluxo da última hora (janela rolante de 60 minutos)
