@@ -17,7 +17,7 @@ router.get("/", wrap(async (req, res) => {
 		quantidadeDeRepeticoes: 5
 	};
 
-	res.render("index/index", opcoes);
+	res.render("index/principal", opcoes);
 }));
 
 router.get("/teste", wrap(async (req, res) => {

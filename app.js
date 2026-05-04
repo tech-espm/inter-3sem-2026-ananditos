@@ -17,6 +17,7 @@
 // na opção "Install Missing npm Package(s)"
 //****************************************************************
 
+const sql = require("./data/sql");
 const express = require("express");
 const path = require("path");
 const wrap = require("express-async-error-wrapper");
