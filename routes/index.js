@@ -7,9 +7,7 @@ const sql = require("../data/sql");
 const url_api = process.env.url_api;
 
 router.get("/", wrap(async (req, res) => {
-	const response = await axios.get(url_api + "?sensor=passage&data_inicial=2026-04-26&data_final=2026-04-28");
-		const dados = response.data;
-	console.log(dados);
+	
 	
 	await sql.connect(async sql => {
 		let lista = await sql.query("select max(id) id from passagem");
