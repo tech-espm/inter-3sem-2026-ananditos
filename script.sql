@@ -11,8 +11,8 @@ CREATE TABLE passagem (
   id_sensor tinyint NOT NULL,
   delta int NOT NULL,
   bateria tinyint NOT NULL,
-  entrada int NOT NULL,
-  saida int NOT NULL,
+  entrada int,
+  saida int,
   PRIMARY KEY (id),
   KEY passagem_data_id_sensor (data, id_sensor),
   KEY passagem_id_sensor (id_sensor)

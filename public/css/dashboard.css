@@ -437,6 +437,19 @@ footer {
 .delay-3 { transition-delay: 0.3s; }
 .delay-4 { transition-delay: 0.4s; }
 
+.chart-donut-wrap {
+	width: 100%;
+	max-width: 280px;
+	aspect-ratio: 1 / 1;
+	margin: 0 auto;
+	position: relative;
+}
+
+.chart-donut-wrap canvas {
+	width: 100% !important;
+	height: 100% !important;
+}
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
     section { padding: 60px 0; }

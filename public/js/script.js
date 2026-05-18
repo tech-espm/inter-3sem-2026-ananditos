@@ -23,7 +23,337 @@ const CYAN = '#00e5c3';
 const PURPLE = '#a78bfa';
 const BLUE = '#60a5fa';
 
-/* ─── CHART 1: Bar - Fluxo por Hora ─── */
+// Funções para os gráficos
+async function carregarDadosDashboard(periodo = "hoje", 
+	periodoVariabilidade = "atual", 
+	periodoEntradasSaidas = "hoje",
+	periodoOcupacao = "hoje") {
+	const resposta = await fetch(`/dashboard/dados?periodo=${periodo}&periodoVariabilidade=${periodoVariabilidade}&periodoEntradasSaidas=${periodoEntradasSaidas}&periodoOcupacao=${periodoOcupacao}`);
+	const dados = await resposta.json();
+
+	return dados;
+}
+
+let graficoFluxoPorHora = null;
+
+async function criarGraficoFluxoPorHora(periodo = "hoje") {
+	const dados = await carregarDadosDashboard(periodo);
+
+	const horas = [];
+
+  for (let h = 0; h <= 23; h++) {
+    horas.push(h);
+  }
+
+  const labels = horas.map(hora => `${hora}h`);
+
+  const valores = horas.map(hora => {
+    const item = dados.fluxoPorHora.find(item => Number(item.hora) === hora);
+
+    if (!item) {
+      return 0;
+    }
+
+    return Number(item.entradas) + Number(item.saidas);
+  });
+
+  if (graficoFluxoPorHora) {
+		graficoFluxoPorHora.destroy();
+	}
+
+	graficoFluxoPorHora = new Chart(document.getElementById("chart1"), {
+		type: "bar",
+		data: {
+			labels: labels,
+			datasets: [{
+				label: "Fluxo por hora",
+				data: valores,
+				backgroundColor: "rgba(0,229,195,0.45)",
+				borderRadius: 5,
+				borderSkipped: false
+			}]
+		},
+		options: {
+			plugins: {
+				legend: {
+					display: false
+				}
+			},
+			scales: {
+				x: {
+					grid: {
+						color: "rgba(255,255,255,0.04)"
+					}
+				},
+				y: {
+					beginAtZero: true,
+					grid: {
+						color: "rgba(255,255,255,0.04)"
+					}
+				}
+			}
+		}
+	});
+}
+document.querySelectorAll("#filtro-fluxo-hora .toggle-btn").forEach(btn => {
+	btn.addEventListener("click", async () => {
+		const periodo = btn.dataset.periodo;
+
+		document.querySelectorAll("#filtro-fluxo-hora .toggle-btn").forEach(b => {
+			b.classList.remove("active");
+		});
+
+		btn.classList.add("active");
+
+		await criarGraficoFluxoPorHora(periodo);
+	});
+});
+
+let graficoVariabilidadeSemanal = null;
+async function criarGraficoVariabilidadeSemanal(periodoVariabilidade = "atual") {
+	const dados = await carregarDadosDashboard("hoje", periodoVariabilidade);
+
+	const diasDaSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+  const labels = diasDaSemana;
+
+  const valoresMinimos = diasDaSemana.map(dia => {
+    const item = dados.variabilidadeSemanal.find(item => item.dia === dia);
+    return item ? Number(item.minimo) : 0;
+  });
+
+  const valoresMedios = diasDaSemana.map(dia => {
+    const item = dados.variabilidadeSemanal.find(item => item.dia === dia);
+    return item ? Number(item.media) : 0;
+  });
+
+  const valoresMaximos = diasDaSemana.map(dia => {
+    const item = dados.variabilidadeSemanal.find(item => item.dia === dia);
+    return item ? Number(item.maximo) : 0;
+  });
+
+  if (graficoVariabilidadeSemanal) {
+		graficoVariabilidadeSemanal.destroy();
+	}
+
+	graficoVariabilidadeSemanal = new Chart(document.getElementById("chart2"), {
+		type: "bar",
+		data: {
+			labels: labels,
+			datasets: [
+				{
+					label: "Mínimo",
+					data: valoresMinimos,
+					backgroundColor: "rgba(0,229,195,0.25)",
+					borderRadius: 4
+				},
+				{
+					label: "Médio",
+					data: valoresMedios,
+					backgroundColor: "rgba(0,229,195,0.5)",
+					borderRadius: 4
+				},
+				{
+					label: "Máximo",
+					data: valoresMaximos,
+					backgroundColor: "#00e5c3",
+					borderRadius: 4
+				}
+			]
+		},
+		options: {
+			plugins: {
+				legend: {
+					position: "top",
+					labels: {
+						boxWidth: 10,
+						padding: 14
+					}
+				}
+			},
+			scales: {
+				x: {
+					stacked: false,
+					grid: {
+						color: "rgba(255,255,255,0.04)"
+					}
+				},
+				y: {
+					beginAtZero: true,
+					stacked: false,
+					grid: {
+						color: "rgba(255,255,255,0.04)"
+					}
+				}
+			}
+		}
+	});
+}
+document.querySelectorAll("#filtro-variabilidade-semanal .toggle-btn").forEach(btn => {
+	btn.addEventListener("click", async () => {
+		const periodoVariabilidade = btn.dataset.periodoVariabilidade;
+
+		document.querySelectorAll("#filtro-variabilidade-semanal .toggle-btn").forEach(b => {
+			b.classList.remove("active");
+		});
+
+		btn.classList.add("active");
+
+		await criarGraficoVariabilidadeSemanal(periodoVariabilidade);
+	});
+});
+
+let graficoEntradasSaidas = null;
+async function criarGraficoEntradasSaidasPorDia(periodoEntradasSaidas = "hoje") {
+	const dados = await carregarDadosDashboard("hoje", "atual", periodoEntradasSaidas);
+
+	const diasDaSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+  const labels = diasDaSemana;
+
+  const entradas = diasDaSemana.map(dia => {
+    const item = dados.entradasSaidasPorDia.find(item => item.dia === dia);
+    return item ? Number(item.entradas) : 0;
+  });
+
+  const saidas = diasDaSemana.map(dia => {
+    const item = dados.entradasSaidasPorDia.find(item => item.dia === dia);
+    return item ? Number(item.saidas) : 0;
+  });
+
+  if (graficoEntradasSaidas) {
+		graficoEntradasSaidas.destroy();
+	}
+
+	graficoEntradasSaidas = new Chart(document.getElementById("chart3"), {
+		type: "bar",
+		data: {
+			labels: labels,
+			datasets: [
+				{
+					label: "Entradas",
+					data: entradas,
+					backgroundColor: CYAN,
+					borderRadius: 4
+				},
+				{
+					label: "Saídas",
+					data: saidas,
+					backgroundColor: PURPLE,
+					borderRadius: 4
+				}
+			]
+		},
+		options: {
+			plugins: {
+				legend: {
+					position: "top",
+					labels: {
+						boxWidth: 10,
+						padding: 14
+					}
+				}
+			},
+			scales: {
+				x: {
+					grid: {
+						color: "rgba(255,255,255,0.04)"
+					}
+				},
+				y: {
+					beginAtZero: true,
+					grid: {
+						color: "rgba(255,255,255,0.04)"
+					}
+				}
+			}
+		}
+	});
+}
+document.querySelectorAll("#filtro-entradas-saidas .toggle-btn").forEach(btn => {
+	btn.addEventListener("click", async () => {
+		const periodoEntradasSaidas = btn.dataset.periodoEntradasSaidas;
+
+		document.querySelectorAll("#filtro-entradas-saidas .toggle-btn").forEach(b => {
+			b.classList.remove("active");
+		});
+
+		btn.classList.add("active");
+
+		await criarGraficoEntradasSaidasPorDia(periodoEntradasSaidas);
+	});
+});
+
+let graficoOcupacaoDia = null;
+async function criarGraficoOcupacaoAoLongoDoDia(periodoOcupacao = "hoje") {
+	const dados = await carregarDadosDashboard("hoje", "atual", "hoje", periodoOcupacao);
+
+	const labels = dados.ocupacaoAoLongoDoDia.map(item => item.horario);
+	const valores = dados.ocupacaoAoLongoDoDia.map(item => Number(item.ocupacao));
+
+	if (graficoOcupacaoDia) {
+		graficoOcupacaoDia.destroy();
+	}
+
+	graficoOcupacaoDia = new Chart(document.getElementById("chart5"), {
+		type: "line",
+		data: {
+			labels: labels,
+			datasets: [{
+				label: "Ocupação",
+				data: valores,
+				borderColor: CYAN,
+				borderWidth: 2,
+				pointRadius: 0,
+				pointHoverRadius: 5,
+				tension: 0.4,
+				fill: true,
+				backgroundColor: (ctx) => {
+					const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
+					g.addColorStop(0, "rgba(0,229,195,0.18)");
+					g.addColorStop(1, "rgba(0,229,195,0)");
+					return g;
+				}
+			}]
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			plugins: {
+				legend: {
+					display: false
+				}
+			},
+			scales: {
+				x: {
+					grid: { color: "rgba(255,255,255,0.04)" },
+					ticks: { maxTicksLimit: 12 }
+				},
+				y: {
+					beginAtZero: true,
+					grid: { color: "rgba(255,255,255,0.04)" }
+				}
+			}
+		}
+	});
+}
+document.querySelectorAll("#filtro-ocupacao .toggle-btn").forEach(btn => {
+	btn.addEventListener("click", async () => {
+		const periodoOcupacao = btn.dataset.periodoOcupacao;
+
+		document.querySelectorAll("#filtro-ocupacao .toggle-btn").forEach(b => {
+			b.classList.remove("active");
+		});
+
+		btn.classList.add("active");
+
+		await criarGraficoOcupacaoAoLongoDoDia(periodoOcupacao);
+	});
+});
+
+
+
+/* ─── CHART 1: Bar - Fluxo por Hora ─── 
 new Chart(document.getElementById('chart1'), {
   type: 'bar',
   data: {
@@ -47,9 +377,9 @@ new Chart(document.getElementById('chart1'), {
       y: { grid: { color: 'rgba(255,255,255,0.04)' } }
     }
   }
-});
+});*/
 
-/* ─── CHART 2: Stacked Bar - Variabilidade Semanal ─── */
+/* ─── CHART 2: Stacked Bar - Variabilidade Semanal ─── 
 new Chart(document.getElementById('chart2'), {
   type: 'bar',
   data: {
@@ -67,9 +397,9 @@ new Chart(document.getElementById('chart2'), {
       y: { stacked: false, grid: { color: 'rgba(255,255,255,0.04)' } }
     }
   }
-});
+});*/
 
-/* ─── CHART 3: Grouped Bar - Entradas vs Saídas ─── */
+/* ─── CHART 3: Grouped Bar - Entradas vs Saídas ─── 
 new Chart(document.getElementById('chart3'), {
   type: 'bar',
   data: {
@@ -86,7 +416,7 @@ new Chart(document.getElementById('chart3'), {
       y: { grid: { color: 'rgba(255,255,255,0.04)' } }
     }
   }
-});
+});*/
 
 /* ─── CHART 4: Doughnut - Ocupação por Setor ─── */
 new Chart(document.getElementById('chart4'), {
@@ -109,7 +439,7 @@ new Chart(document.getElementById('chart4'), {
   }
 });
 
-/* ─── CHART 5: Line - Tendência Real ─── */
+/* ─── CHART 5: Line - Tendência Real ─── 
 const labels5 = [];
 const data5 = [];
 for (let h = 6; h <= 23; h++) {
@@ -140,11 +470,24 @@ new Chart(document.getElementById('chart5'), {
     }]
   },
   options: {
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 12 } },
-      y: { grid: { color: 'rgba(255,255,255,0.04)' } }
-    }
+    responsive: true,
+	  maintainAspectRatio: false,
+	  plugins: {
+		legend: {
+			display: false,
+			labels: {
+				boxWidth: 10,
+				padding: 12,
+				font: { size: 11 }
+			}
+		}
+	},
+	cutout: '65%'
   }
-});
+});*/
 
+// Chamada das funções para os gráficos 
+criarGraficoFluxoPorHora("hoje");
+criarGraficoVariabilidadeSemanal("atual");
+criarGraficoEntradasSaidasPorDia("hoje");
+criarGraficoOcupacaoAoLongoDoDia("hoje");

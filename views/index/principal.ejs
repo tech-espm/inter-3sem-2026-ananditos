@@ -145,10 +145,10 @@
               <div class="chart-title">Distribuição de Fluxo por Hora</div>
               <div class="chart-subtitle">Contagem bidirecional ao longo do dia</div>
             </div>
-            <div class="chart-toggle">
-              <button class="toggle-btn active">Hoje</button>
-              <button class="toggle-btn">Semana</button>
-              <button class="toggle-btn">Mês</button>
+            <div class="chart-toggle" id="filtro-fluxo-hora">
+              <button class="toggle-btn active" data-periodo="hoje">Hoje</button>
+              <button class="toggle-btn" data-periodo="semana">Semana</button>
+              <button class="toggle-btn" data-periodo="mes">Mês</button>
             </div>
           </div>
           <div class="chart-canvas-wrap mt-3">
@@ -164,10 +164,10 @@
               <div class="chart-title">Variabilidade Semanal</div>
               <div class="chart-subtitle">Amplitude da ocupação média por dia da semana</div>
             </div>
-            <div class="chart-toggle">
-              <button class="toggle-btn active">Atual</button>
-              <button class="toggle-btn">Anterior</button>
-              <button class="toggle-btn">Mês</button>
+            <div class="chart-toggle" id="filtro-variabilidade-semanal">
+              <button class="toggle-btn active" data-periodo-variabilidade="atual">Atual</button>
+              <button class="toggle-btn" data-periodo-variabilidade="anterior">Anterior</button>
+              <button class="toggle-btn" data-periodo-variabilidade="mes">Mês</button>
             </div>
           </div>
           <div class="chart-canvas-wrap mt-3">
@@ -187,10 +187,10 @@
               <div class="chart-title">Entradas vs. Saídas</div>
               <div class="chart-subtitle">Comparativo do fluxo de pessoas por semana</div>
             </div>
-            <div class="chart-toggle">
-              <button class="toggle-btn active">Hoje</button>
-              <button class="toggle-btn">Semana</button>
-              <button class="toggle-btn">Mês</button>
+            <div class="chart-toggle" id="filtro-entradas-saidas">
+              <button class="toggle-btn active" data-periodo-entradas-saidas="hoje">Hoje</button>
+              <button class="toggle-btn" data-periodo-entradas-saidas="semana">Semana</button>
+              <button class="toggle-btn" data-periodo-entradas-saidas="mes">Mês</button>
             </div>
           </div>
           <div class="chart-canvas-wrap mt-3">
@@ -212,8 +212,8 @@
               <button class="toggle-btn">Mês</button>
             </div>
           </div>
-          <div class="chart-canvas-wrap mt-3 d-flex justify-content-center">
-            <canvas id="chart4" height="180" style="max-width:280px;"></canvas>
+          <div class="chart-canvas-wrap chart-donut-wrap mt-3">
+            <canvas id="chart4"></canvas>
           </div>
         </div>
       </div>
@@ -228,14 +228,14 @@
               <div class="chart-title">Tendência de Ocupação em Tempo Real</div>
               <div class="chart-subtitle">Monitoramento contínuo da ocupação ao longo do tempo</div>
             </div>
-            <div class="chart-toggle">
-              <button class="toggle-btn active">Hoje</button>
-              <button class="toggle-btn">Semana</button>
-              <button class="toggle-btn">30m</button>
+            <div class="chart-toggle" id="filtro-ocupacao">
+              <button class="toggle-btn active" data-periodo-ocupacao="hoje">Hoje</button>
+              <button class="toggle-btn" data-periodo-ocupacao="semana">Semana</button>
+              <button class="toggle-btn" data-periodo-ocupacao="30min">30m</button>
             </div>
           </div>
           <div class="chart-canvas-wrap mt-3">
-            <canvas id="chart5" height="100"></canvas>
+            <canvas id="chart5" height="280"></canvas>
           </div>
         </div>
       </div>
