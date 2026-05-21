@@ -27,8 +27,9 @@ const BLUE = '#60a5fa';
 async function carregarDadosDashboard(periodo = "hoje", 
 	periodoVariabilidade = "atual", 
 	periodoEntradasSaidas = "hoje",
-	periodoOcupacao = "hoje") {
-	const resposta = await fetch(`/dashboard/dados?periodo=${periodo}&periodoVariabilidade=${periodoVariabilidade}&periodoEntradasSaidas=${periodoEntradasSaidas}&periodoOcupacao=${periodoOcupacao}`);
+	periodoOcupacao = "hoje",
+	periodoSetor = "hoje") {
+	const resposta = await fetch(`/dashboard/dados?periodo=${periodo}&periodoVariabilidade=${periodoVariabilidade}&periodoEntradasSaidas=${periodoEntradasSaidas}&periodoOcupacao=${periodoOcupacao}&periodoSetor=${periodoSetor}`);
 	const dados = await resposta.json();
 
 	return dados;
@@ -351,6 +352,62 @@ document.querySelectorAll("#filtro-ocupacao .toggle-btn").forEach(btn => {
 	});
 });
 
+let graficoOcupacaoPorSetor = null;
+async function criarGraficoOcupacaoPorSetor(periodoSetor = "hoje") {
+	const dados = await carregarDadosDashboard("hoje", "atual", "hoje", "hoje", periodoSetor);
+
+	const labels = dados.ocupacaoPorSetor.map(item => item.setor);
+	const valores = dados.ocupacaoPorSetor.map(item => Number(item.ocupacao));
+
+	if (graficoOcupacaoPorSetor) {
+		graficoOcupacaoPorSetor.destroy();
+	}
+
+	graficoOcupacaoPorSetor = new Chart(document.getElementById("chart4"), {
+		type: "doughnut",
+		data: {
+			labels: labels,
+			datasets: [{
+				data: valores,
+				backgroundColor: [CYAN, PURPLE, BLUE, "#f59e0b", "rgba(255,255,255,0.15)"],
+				borderColor: "#0c0f14",
+				borderWidth: 3,
+				hoverOffset: 10
+			}]
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			plugins: {
+				legend: {
+					position: "right",
+					labels: {
+						boxWidth: 10,
+						padding: 12,
+						font: {
+							size: 11
+						}
+					}
+				}
+			},
+			cutout: "65%"
+		}
+	});
+}
+document.querySelectorAll("#filtro-ocupacao-setor .toggle-btn").forEach(btn => {
+	btn.addEventListener("click", async () => {
+		const periodoSetor = btn.dataset.periodoSetor;
+
+		document.querySelectorAll("#filtro-ocupacao-setor .toggle-btn").forEach(b => {
+			b.classList.remove("active");
+		});
+
+		btn.classList.add("active");
+
+		await criarGraficoOcupacaoPorSetor(periodoSetor);
+	});
+});
+
 
 
 /* ─── CHART 1: Bar - Fluxo por Hora ─── 
@@ -418,7 +475,7 @@ new Chart(document.getElementById('chart3'), {
   }
 });*/
 
-/* ─── CHART 4: Doughnut - Ocupação por Setor ─── */
+/* ─── CHART 4: Doughnut - Ocupação por Setor ─── 
 new Chart(document.getElementById('chart4'), {
   type: 'doughnut',
   data: {
@@ -437,7 +494,7 @@ new Chart(document.getElementById('chart4'), {
     },
     cutout: '65%'
   }
-});
+});*/
 
 /* ─── CHART 5: Line - Tendência Real ─── 
 const labels5 = [];
@@ -491,3 +548,4 @@ criarGraficoFluxoPorHora("hoje");
 criarGraficoVariabilidadeSemanal("atual");
 criarGraficoEntradasSaidasPorDia("hoje");
 criarGraficoOcupacaoAoLongoDoDia("hoje");
+criarGraficoOcupacaoPorSetor("hoje");
