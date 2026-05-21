@@ -97,6 +97,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 	let periodoVariabilidade = req.query.periodoVariabilidade || "atual";
 	let periodoEntradasSaidas = req.query.periodoEntradasSaidas || "hoje";
 	let periodoOcupacao = req.query.periodoOcupacao || "hoje";
+	let periodoSetor = req.query.periodoSetor || "hoje";
 
 	// Fluxo por hora
 	let filtroFluxoPorHora = "date(data) = curdate()";
@@ -125,7 +126,14 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 		filtroEntradasSaidas = "month(data) = month(curdate()) and year(data) = year(curdate())";
 	}
 
+	// Ocupação por setor
+	let filtroOcupacaoSetor = "date(p.data) = curdate()";
 
+	if (periodoSetor === "semana") {
+		filtroOcupacaoSetor = "yearweek(p.data, 1) = yearweek(curdate(), 1)";
+	} else if (periodoSetor === "mes") {
+		filtroOcupacaoSetor = "month(p.data) = month(curdate()) and year(p.data) = year(curdate())";
+	}
 
 	let dados = await sql.connect(async sql => {
 		let fluxoPorHora = await sql.query(`
@@ -134,7 +142,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 				sum(entrada) entradas,
 				sum(saida) saidas
 			from passagem
-			where ${filtroFluxoPorHora}
+			where ${filtroFluxoPorHora} and id < 900000
 			group by hour(data)
 			order by hour(data)
 		`);
@@ -164,7 +172,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 						entrada,
 						saida
 					from passagem
-					where ${filtroVariabilidadeSemanal}
+					where ${filtroVariabilidadeSemanal} and id < 900000
 					order by data, id
 				) dados
 				cross join (select @ocupacao := 0) variavel
@@ -189,7 +197,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 				sum(entrada) entradas,
 				sum(saida) saidas
 			from passagem
-			where ${filtroEntradasSaidas}
+			where ${filtroEntradasSaidas} and id < 900000
 			group by weekday(data), dia
 			order by weekday(data)
 		`);
@@ -211,7 +219,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 							entrada,
 							saida
 						from passagem
-						where yearweek(data, 1) = yearweek(curdate(), 1)
+						where yearweek(data, 1) = yearweek(curdate(), 1) and id < 900000
 						order by data, id
 					) dados
 					cross join (select @ocupacao := 0) variavel
@@ -234,7 +242,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 							entrada,
 							saida
 						from passagem
-						where date(data) = curdate()
+						where date(data) = curdate() and id < 900000
 						order by data, id
 					) dados
 					cross join (select @ocupacao := 0) variavel
@@ -257,7 +265,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 							entrada,
 							saida
 						from passagem
-						where date(data) = curdate()
+						where date(data) = curdate() and id < 900000
 						order by data, id
 					) dados
 					cross join (select @ocupacao := 0) variavel
@@ -266,11 +274,25 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 			`);
 		}
 
+		let ocupacaoPorSetor = await sql.query(`
+			select
+				s.setor,
+				coalesce(greatest(sum(p.entrada) - sum(p.saida), 0), 0) ocupacao
+			from sensor_setor s
+			left join passagem p 
+				on p.id_sensor = s.id_sensor
+				and ${filtroOcupacaoSetor}
+			where s.ativo = 1
+			group by s.setor
+			order by s.setor
+		`);
+
 		return {
 			fluxoPorHora,
 			variabilidadeSemanal,
 			entradasSaidasPorDia,
-			ocupacaoAoLongoDoDia
+			ocupacaoAoLongoDoDia,
+			ocupacaoPorSetor
 		};
 	});
 
