@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: ananditos.backendlogin.BackendLoginApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 103.0 s -- in ananditos.backendlogin.BackendLoginApplicationTests

@@ -1,0 +1,17 @@
+ananditos\backendlogin\dto\response\DashboardDataResponse$VariabilidadeSemanal.class
+ananditos\backendlogin\config\RateLimitFilter.class
+ananditos\backendlogin\dto\response\DashboardDataResponse$EntradasSaidasPorDia.class
+ananditos\backendlogin\controller\AuthController.class
+ananditos\backendlogin\config\RateLimitFilter$Bucket.class
+ananditos\backendlogin\config\RateLimitFilter$Rule.class
+ananditos\backendlogin\service\AuthService.class
+ananditos\backendlogin\dto\response\DashboardDataResponse.class
+ananditos\backendlogin\dto\response\DashboardDataResponse$FluxoPorHora.class
+ananditos\backendlogin\controller\DashboardController.class
+ananditos\backendlogin\dto\response\DashboardDataResponse$OcupacaoAoLongoDoDia.class
+ananditos\backendlogin\config\ApiExceptionHandler.class
+ananditos\backendlogin\config\RateLimitFilter$LimitResult.class
+ananditos\backendlogin\dto\response\DashboardDataResponse$OcupacaoPorSetor.class
+ananditos\backendlogin\service\DashboardService.class
+ananditos\backendlogin\dto\request\LoginRequest.class
+ananditos\backendlogin\dto\response\LoginResponse.class
