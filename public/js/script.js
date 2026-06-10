@@ -1,4 +1,175 @@
 /* ─── FADE-IN OBSERVER ─── */
+const $ = (selector) => document.querySelector(selector);
+const SESSION_KEY = "ananditos.usuario";
+const cooldowns = new Map();
+
+function setStatus(element, message, type = "") {
+  if (!element) {
+    return;
+  }
+
+  element.textContent = message;
+  element.classList.remove("success", "error");
+
+  if (type) {
+    element.classList.add(type);
+  }
+}
+
+function setButtonLoading(button, loading) {
+  if (!button) {
+    return;
+  }
+
+  if (loading) {
+    button.dataset.label = button.textContent;
+    button.textContent = "Enviando...";
+    button.disabled = true;
+    return;
+  }
+
+  button.textContent = button.dataset.label || button.textContent;
+  button.disabled = false;
+}
+
+async function apiFetch(url, options = {}, cooldownKey = url, cooldownMs = 900) {
+  const now = Date.now();
+  const nextAllowedAt = cooldowns.get(cooldownKey) || 0;
+
+  if (now < nextAllowedAt) {
+    throw new Error("Aguarde alguns segundos antes de tentar novamente.");
+  }
+
+  cooldowns.set(cooldownKey, now + cooldownMs);
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  const text = await response.text();
+  let payload = null;
+
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = { message: text };
+    }
+  }
+
+  if (!response.ok) {
+    const retryAfter = response.headers.get("Retry-After");
+    const message = payload?.message || payload?.error || "Nao foi possivel concluir a requisicao.";
+    throw new Error(retryAfter ? `${message} Tente novamente em ${retryAfter}s.` : message);
+  }
+
+  return payload;
+}
+
+function getStoredUser() {
+  try {
+    return JSON.parse(sessionStorage.getItem(SESSION_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function storeUser(user) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  renderSession();
+}
+
+function clearUser() {
+  sessionStorage.removeItem(SESSION_KEY);
+  renderSession();
+}
+
+function renderSession() {
+  const user = getStoredUser();
+  const label = $("#session-user");
+  const logoutButton = $("#logout-button");
+
+  if (!label || !logoutButton) {
+    return;
+  }
+
+  if (user) {
+    label.textContent = `${user.nome} (${user.email})`;
+    logoutButton.hidden = false;
+    return;
+  }
+
+  label.textContent = "Nenhum usuario conectado";
+  logoutButton.hidden = true;
+}
+
+function bindAuthForms() {
+  const loginForm = $("#login-form");
+  const cadastroForm = $("#cadastro-form");
+  const logoutButton = $("#logout-button");
+
+  loginForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const button = loginForm.querySelector("button[type='submit']");
+    const status = $("#login-status");
+    setStatus(status, "");
+    setButtonLoading(button, true);
+
+    try {
+      const user = await apiFetch("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: $("#login-email").value.trim(),
+          senha: $("#login-senha").value
+        })
+      }, "auth-login", 1200);
+
+      storeUser(user);
+      setStatus(status, "Login realizado com sucesso.", "success");
+      loginForm.reset();
+    } catch (error) {
+      setStatus(status, error.message, "error");
+    } finally {
+      setButtonLoading(button, false);
+    }
+  });
+
+  cadastroForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const button = cadastroForm.querySelector("button[type='submit']");
+    const status = $("#cadastro-status");
+    setStatus(status, "");
+    setButtonLoading(button, true);
+
+    try {
+      const user = await apiFetch("/user", {
+        method: "POST",
+        body: JSON.stringify({
+          nome: $("#cadastro-nome").value.trim(),
+          email: $("#cadastro-email").value.trim(),
+          senha: $("#cadastro-senha").value
+        })
+      }, "user-create", 1200);
+
+      storeUser(user);
+      setStatus(status, "Cadastro criado e sessao iniciada.", "success");
+      cadastroForm.reset();
+    } catch (error) {
+      setStatus(status, error.message, "error");
+    } finally {
+      setButtonLoading(button, false);
+    }
+  });
+
+  logoutButton?.addEventListener("click", () => clearUser());
+}
+
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.12 });
@@ -544,6 +715,8 @@ new Chart(document.getElementById('chart5'), {
 });*/
 
 // Chamada das funções para os gráficos 
+bindAuthForms();
+renderSession();
 criarGraficoFluxoPorHora("hoje");
 criarGraficoVariabilidadeSemanal("atual");
 criarGraficoEntradasSaidasPorDia("hoje");

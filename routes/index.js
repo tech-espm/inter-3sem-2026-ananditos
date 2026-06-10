@@ -5,27 +5,52 @@ const router = express.Router();
 const sql = require("../data/sql");
 
 const url_api = process.env.url_api;
+const url_login_api = process.env.url_login_api || process.env.LOGIN_API_URL || "http://127.0.0.1:8080";
+
+async function repassarParaLoginBackend(req, res, caminho) {
+	try {
+		const response = await axios.post(url_login_api + caminho, req.body, {
+			headers: {
+				"Content-Type": "application/json"
+			}
+		});
+
+		res.status(response.status).json(response.data);
+	} catch (error) {
+		if (error.response) {
+			return res.status(error.response.status).json(error.response.data);
+		}
+
+		res.status(502).json({
+			message: "Nao foi possivel conectar ao backend de login."
+		});
+	}
+}
 
 router.get("/", wrap(async (req, res) => {
 	
 	
-	await sql.connect(async sql => {
-		let lista = await sql.query("select max(id) id from passagem");
+	try {
+		await sql.connect(async sql => {
+			let lista = await sql.query("select max(id) id from passagem");
 
-		let id_inferior = 92107;
-		if (lista[0].id) {
-			id_inferior = lista[0].id;
-		}
+			let id_inferior = 92107;
+			if (lista[0].id) {
+				id_inferior = lista[0].id;
+			}
 
-		const response = await axios.get(url_api + "?sensor=passage&id_inferior=" + id_inferior);
-		const dadosNovos = response.data;
+			const response = await axios.get(url_api + "?sensor=passage&id_inferior=" + id_inferior);
+			const dadosNovos = response.data;
 
-		for (let i = 0; i < dadosNovos.length; i++) {
-			const dadoNovo = dadosNovos[i];
+			for (let i = 0; i < dadosNovos.length; i++) {
+				const dadoNovo = dadosNovos[i];
 
-			await sql.query("insert into passagem (id, data, id_sensor, delta, bateria, entrada, saida) values (?, ?, ?, ?, ?, ?, ?)", [dadoNovo.id, dadoNovo.data, dadoNovo.id_sensor, dadoNovo.delta, dadoNovo.bateria, dadoNovo.entrada, dadoNovo.saida]);
-		}
-	});
+				await sql.query("insert into passagem (id, data, id_sensor, delta, bateria, entrada, saida) values (?, ?, ?, ?, ?, ?, ?)", [dadoNovo.id, dadoNovo.data, dadoNovo.id_sensor, dadoNovo.delta, dadoNovo.bateria, dadoNovo.entrada, dadoNovo.saida]);
+			}
+		});
+	} catch (error) {
+		console.warn("Nao foi possivel sincronizar os dados de passagem:", error.message);
+	}
 
 	let nomeDoUsuarioQueVeioDoBanco = "Rafael";
 
@@ -88,6 +113,14 @@ router.get("/produtos", wrap(async (req, res) => {
 	};
 
 	res.render("index/produtos", opcoes);
+}));
+
+router.post("/auth/login", wrap(async (req, res) => {
+	await repassarParaLoginBackend(req, res, "/auth/login");
+}));
+
+router.post("/user", wrap(async (req, res) => {
+	await repassarParaLoginBackend(req, res, "/user");
 }));
 
 // Rota para os gráficos

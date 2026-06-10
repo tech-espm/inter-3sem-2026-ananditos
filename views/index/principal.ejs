@@ -7,6 +7,7 @@
       </a>
       <div class="d-none d-md-flex align-items-center gap-1">
         <a href="#sobre" class="nav-link-custom">Sobre</a>
+        <a href="#acesso" class="nav-link-custom">Acesso</a>
         <a href="#equipe" class="nav-link-custom">Equipe</a>
         <a href="#dashboard" class="nav-link-custom">Dashboard</a>
         <a href="#dados" class="nav-link-custom">Dados</a>
@@ -29,7 +30,10 @@
       <p class="hero-subtitle mx-auto">
         Ao transformar o movimento humano em inteligência operacional, preenchemos as lacunas do sistema tradicional.
       </p>
-      <a href="#sobre" class="btn-hero-primary">Explorar Projeto</a>
+      <div class="hero-actions">
+        <a href="#sobre" class="btn-hero-primary">Explorar Projeto</a>
+        <a href="#acesso" class="btn-hero-secondary">Entrar</a>
+      </div>
     </div>
     <div class="scroll-hint fade-up delay-2">
       <div class="scroll-arrow"></div>
@@ -81,6 +85,54 @@
           <div class="card-title">Conformidade LGPD</div>
           <p class="card-desc">100% aderente à Lei Geral de Proteção de Dados — sem coleta de biometria.</p>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACESSO -->
+<section class="acesso-section" id="acesso">
+  <div class="container">
+    <div class="row g-4 align-items-stretch">
+      <div class="col-lg-4 fade-up">
+        <div class="access-panel h-100">
+          <div class="section-eyebrow">Acesso</div>
+          <h2 class="section-title text-start">Area do <span>Usuario</span></h2>
+          <p class="section-desc text-start mx-0">
+            Entre com uma conta existente ou cadastre um novo usuario para acompanhar o painel.
+          </p>
+          <div class="session-box" id="session-box">
+            <span class="session-label">Sessao</span>
+            <strong id="session-user">Nenhum usuario conectado</strong>
+            <button type="button" class="btn-link-action" id="logout-button" hidden>Sair</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 fade-up delay-1">
+        <form class="auth-card h-100" id="login-form">
+          <h3>Entrar</h3>
+          <label for="login-email">E-mail</label>
+          <input id="login-email" name="email" type="email" autocomplete="email" required />
+          <label for="login-senha">Senha</label>
+          <input id="login-senha" name="senha" type="password" autocomplete="current-password" required />
+          <button type="submit" class="btn-submit">Acessar dashboard</button>
+          <p class="form-status" id="login-status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="col-lg-4 fade-up delay-2">
+        <form class="auth-card h-100" id="cadastro-form">
+          <h3>Criar conta</h3>
+          <label for="cadastro-nome">Nome</label>
+          <input id="cadastro-nome" name="nome" type="text" autocomplete="name" required />
+          <label for="cadastro-email">E-mail</label>
+          <input id="cadastro-email" name="email" type="email" autocomplete="email" required />
+          <label for="cadastro-senha">Senha</label>
+          <input id="cadastro-senha" name="senha" type="password" autocomplete="new-password" required />
+          <button type="submit" class="btn-submit secondary">Cadastrar</button>
+          <p class="form-status" id="cadastro-status" aria-live="polite"></p>
+        </form>
       </div>
     </div>
   </div>
