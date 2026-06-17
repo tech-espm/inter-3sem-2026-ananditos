@@ -10,7 +10,7 @@ router.get("/", wrap(async (req, res) => {
 	
 	
 	await sql.connect(async sql => {
-		let lista = await sql.query("select max(id) id from passagem");
+		let lista = await sql.query("select max(id) id from passagem where id < 900000");
 
 		let id_inferior = 92107;
 		if (lista[0].id) {
@@ -100,39 +100,42 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 	let periodoSetor = req.query.periodoSetor || "hoje";
 
 	// Fluxo por hora
-	let filtroFluxoPorHora = "date(data) = curdate()";
+	//let filtroFluxoPorHora = "date(data) = curdate()";
+	let filtroFluxoPorHora = "date(data) = (select date(max(data)) from passagem where id < 900000)";
 
 	if (periodo === "semana") {
-		filtroFluxoPorHora = "yearweek(data, 1) = yearweek(curdate(), 1)";
+		//filtroFluxoPorHora = "yearweek(data, 1) = yearweek(curdate(), 1)";
+		filtroFluxoPorHora = "yearweek(data, 1) = yearweek((select max(data) from passagem where id < 900000), 1)";
 	} else if (periodo === "mes") {
-		filtroFluxoPorHora = "month(data) = month(curdate()) and year(data) = year(curdate())";
+		filtroFluxoPorHora = "month(data) = month((select max(data) from passagem where id < 900000)) and year(data) = year((select max(data) from passagem where id < 900000))";
 	}
 
 	// Variabilidade semanal
-	let filtroVariabilidadeSemanal = "yearweek(data, 1) = yearweek(curdate(), 1)";
+	let filtroVariabilidadeSemanal = "yearweek(data, 1) = yearweek((select max(data) from passagem where id < 900000), 1)";
 
 	if (periodoVariabilidade === "anterior") {
-		filtroVariabilidadeSemanal = "yearweek(data, 1) = yearweek(date_sub(curdate(), interval 7 day), 1)";
+		filtroVariabilidadeSemanal = "yearweek(data, 1) = yearweek(date_sub((select max(data) from passagem where id < 900000), interval 7 day), 1)";
 	} else if (periodoVariabilidade === "mes") {
-		filtroVariabilidadeSemanal = "month(data) = month(curdate()) and year(data) = year(curdate())";
+		filtroVariabilidadeSemanal = "month(data) = month((select max(data) from passagem where id < 900000)) and year(data) = year((select max(data) from passagem where id < 900000))";
 	}
 
+	
 	// Comparativo de entradas e saídas
-	let filtroEntradasSaidas = "date(data) = curdate()";
+	let filtroEntradasSaidas = "date(data) = (select date(max(data)) from passagem where id < 900000)";
 
 	if (periodoEntradasSaidas === "semana") {
-		filtroEntradasSaidas = "yearweek(data, 1) = yearweek(curdate(), 1)";
+		filtroEntradasSaidas = "yearweek(data, 1) = yearweek((select max(data) from passagem where id < 900000), 1)";
 	} else if (periodoEntradasSaidas === "mes") {
-		filtroEntradasSaidas = "month(data) = month(curdate()) and year(data) = year(curdate())";
+		filtroEntradasSaidas = "month(data) = month((select max(data) from passagem where id < 900000)) and year(data) = year((select max(data) from passagem where id < 900000))";
 	}
 
 	// Ocupação por setor
-	let filtroOcupacaoSetor = "date(p.data) = curdate()";
+	let filtroOcupacaoSetor = "date(p.data) = (select date(max(data)) from passagem)";
 
 	if (periodoSetor === "semana") {
-		filtroOcupacaoSetor = "yearweek(p.data, 1) = yearweek(curdate(), 1)";
+		filtroOcupacaoSetor = "yearweek(p.data, 1) = yearweek((select max(data) from passagem), 1)";
 	} else if (periodoSetor === "mes") {
-		filtroOcupacaoSetor = "month(p.data) = month(curdate()) and year(p.data) = year(curdate())";
+		filtroOcupacaoSetor = "month(p.data) = month((select max(data) from passagem)) and year(p.data) = year((select max(data) from passagem))";
 	}
 
 	let dados = await sql.connect(async sql => {
@@ -156,7 +159,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 					when 2 then 'Qua'
 					when 3 then 'Qui'
 					when 4 then 'Sex'
-					when 5 then 'Sab'
+					when 5 then 'Sáb'
 					when 6 then 'Dom'
 				end dia,
 				min(ocupacao) minimo,
@@ -219,7 +222,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 							entrada,
 							saida
 						from passagem
-						where yearweek(data, 1) = yearweek(curdate(), 1) and id < 900000
+						where yearweek(data, 1) = yearweek((select max(data) from passagem where id < 900000), 1) and id < 900000
 						order by data, id
 					) dados
 					cross join (select @ocupacao := 0) variavel
@@ -242,12 +245,12 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 							entrada,
 							saida
 						from passagem
-						where date(data) = curdate() and id < 900000
+						where date(data) = (select date(max(data)) from passagem where id < 900000) and id < 900000
 						order by data, id
 					) dados
 					cross join (select @ocupacao := 0) variavel
 				) ocupacao_por_registro
-				where data >= date_sub(now(), interval 30 minute)
+				where data >= date_sub((select max(data) from passagem where id < 900000), interval 30 minute)
 				order by data
 			`);
 		} else {
@@ -265,7 +268,7 @@ router.get("/dashboard/dados", wrap(async (req, res) => {
 							entrada,
 							saida
 						from passagem
-						where date(data) = curdate() and id < 900000
+						where date(data) = (select date(max(data)) from passagem where id < 900000) and id < 900000
 						order by data, id
 					) dados
 					cross join (select @ocupacao := 0) variavel
